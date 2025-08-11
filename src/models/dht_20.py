@@ -1,6 +1,7 @@
 import time
 from typing import (Any, ClassVar, Mapping, Sequence, Tuple)
 
+import smbus2
 from typing_extensions import Self
 from viam.components.sensor import Sensor
 from viam.proto.app.robot import ComponentConfig
@@ -9,11 +10,6 @@ from viam.resource.base import ResourceBase
 from viam.resource.easy_resource import EasyResource
 from viam.resource.types import Model, ModelFamily
 from viam.utils import SensorReading, ValueTypes, struct_to_dict
-
-try:
-    import smbus2
-except ImportError:
-    smbus2 = None
 
 
 class Dht20(Sensor, EasyResource):
@@ -105,9 +101,6 @@ class Dht20(Sensor, EasyResource):
         
         # Initialize I2C connection
         try:
-            if smbus2 is None:
-                raise RuntimeError("smbus2 library is required but not available. Please install with: pip install smbus2")
-                
             self.i2c_bus = smbus2.SMBus(self.i2c_bus_number)
             self.logger.info(f"DHT-20 initialized on I2C bus {self.i2c_bus_number}")
             
