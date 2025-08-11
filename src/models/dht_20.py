@@ -146,6 +146,52 @@ class Dht20(Sensor, EasyResource):
             finally:
                 self.i2c_bus = None
 
+    def _read_sensor_data(self) -> Tuple[float, float]:
+        """Read temperature and humidity from DHT-20 sensor.
+        
+        Returns:
+            Tuple[float, float]: Temperature in Celsius, Humidity as percentage
+            
+        Raises:
+            RuntimeError: If sensor communication fails
+        """
+        if self.i2c_bus is None:
+            raise RuntimeError("I2C bus not initialized")
+        
+        try:
+            # Send measurement command
+            self.i2c_bus.write_i2c_block_data(
+                self.DHT20_I2C_ADDRESS, 
+                self.DHT20_CMD_MEASURE, 
+                self.DHT20_MEASURE_PARAMS
+            )
+            
+            # Wait for measurement to complete
+            time.sleep(self.DHT20_MEASURE_DELAY)
+            
+            # Read 7 bytes of data
+            data = self.i2c_bus.read_i2c_block_data(self.DHT20_I2C_ADDRESS, self.DHT20_CMD_INIT, 7)
+            
+            # Parse temperature data (20-bit value)
+            temp_raw = ((data[3] & 0xf) << 16) + (data[4] << 8) + data[5]
+            temperature = (200.0 * float(temp_raw) / (2**20)) - 50.0
+            
+            # Parse humidity data (20-bit value)
+            humid_raw = ((data[3] & 0xf0) >> 4) + (data[1] << 12) + (data[2] << 4)
+            humidity = 100.0 * float(humid_raw) / (2**20)
+            
+            # Validate readings are within reasonable ranges
+            if temperature < -40 or temperature > 80:
+                self.logger.warning(f"Temperature reading out of expected range: {temperature}°C")
+            if humidity < 0 or humidity > 100:
+                self.logger.warning(f"Humidity reading out of expected range: {humidity}%")
+            
+            self.logger.debug(f"DHT-20 reading: {temperature:.2f}°C, {humidity:.2f}%")
+            return temperature, humidity
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to read DHT-20 sensor data: {e}")
+
     async def get_readings(
         self,
         *,
@@ -153,8 +199,24 @@ class Dht20(Sensor, EasyResource):
         timeout: Optional[float] = None,
         **kwargs
     ) -> Mapping[str, SensorReading]:
-        self.logger.error("`get_readings` is not implemented")
-        raise NotImplementedError()
+        """Get temperature and humidity readings from DHT-20 sensor.
+        
+        Returns:
+            Mapping[str, SensorReading]: Dictionary containing:
+                - "temperature_celsius": Temperature in Celsius
+                - "humidity_percent": Relative humidity as percentage
+        """
+        try:
+            temperature, humidity = self._read_sensor_data()
+            
+            return {
+                "temperature_celsius": temperature,
+                "humidity_percent": humidity
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get DHT-20 readings: {e}")
+            raise
 
     async def do_command(
         self,
@@ -163,12 +225,41 @@ class Dht20(Sensor, EasyResource):
         timeout: Optional[float] = None,
         **kwargs
     ) -> Mapping[str, ValueTypes]:
-        self.logger.error("`do_command` is not implemented")
-        raise NotImplementedError()
+        """Execute custom commands for DHT-20 sensor.
+        
+        Supported commands:
+        - "get_status": Returns sensor connection status
+        - "get_raw_data": Returns raw sensor data bytes
+        """
+        cmd_name = command.get("command")
+        
+        if cmd_name == "get_status":
+            try:
+                self._check_sensor_presence()
+                return {"status": "ok", "i2c_bus": self.i2c_bus_number}
+            except Exception as e:
+                return {"status": "error", "error": str(e)}
+        
+        elif cmd_name == "get_raw_data":
+            try:
+                # Send measurement command and get raw bytes
+                self.i2c_bus.write_i2c_block_data(
+                    self.DHT20_I2C_ADDRESS,
+                    self.DHT20_CMD_MEASURE,
+                    self.DHT20_MEASURE_PARAMS
+                )
+                time.sleep(self.DHT20_MEASURE_DELAY)
+                data = self.i2c_bus.read_i2c_block_data(self.DHT20_I2C_ADDRESS, self.DHT20_CMD_INIT, 7)
+                return {"raw_bytes": [hex(b) for b in data]}
+            except Exception as e:
+                return {"error": str(e)}
+        
+        else:
+            return {"error": f"Unknown command: {cmd_name}"}
 
     async def get_geometries(
         self, *, extra: Optional[Dict[str, Any]] = None, timeout: Optional[float] = None
     ) -> List[Geometry]:
-        self.logger.error("`get_geometries` is not implemented")
-        raise NotImplementedError()
+        """DHT-20 sensor has no physical geometry to report."""
+        return []
 
