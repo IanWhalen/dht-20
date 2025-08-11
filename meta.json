@@ -3,12 +3,12 @@
   "module_id": "ianwhalen:dht-20",
   "visibility": "public",
   "url": "",
-  "description": "Modular sensor component: dht-20",
+  "description": "DHT-20 temperature and humidity sensor with I2C communication",
   "models": [
     {
       "api": "rdk:component:sensor",
       "model": "ianwhalen:dht-20:dht-20",
-      "short_description": "Provide a short (100 characters or less) description of this model here",
+      "short_description": "DHT-20 digital temperature and humidity sensor using I2C interface",
       "markdown_link": "README.md#model-ianwhalendht-20dht-20"
     }
   ],
