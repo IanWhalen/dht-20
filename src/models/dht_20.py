@@ -1,6 +1,5 @@
 import time
-from typing import (Any, ClassVar, Dict, Final, List, Mapping, Optional,
-                    Sequence, Tuple)
+from typing import (Any, ClassVar, Mapping, Sequence, Tuple)
 
 from typing_extensions import Self
 from viam.components.sensor import *
@@ -30,7 +29,7 @@ class Dht20(Sensor, EasyResource):
 
     def __init__(self, name: str):
         super().__init__(name)
-        self.i2c_bus: Optional[smbus2.SMBus] = None
+        self.i2c_bus: smbus2.SMBus | None = None
         self.i2c_bus_number: int = 1  # Default I2C bus
 
     @classmethod
@@ -195,8 +194,8 @@ class Dht20(Sensor, EasyResource):
     async def get_readings(
         self,
         *,
-        extra: Optional[Mapping[str, Any]] = None,
-        timeout: Optional[float] = None,
+        extra: Mapping[str, Any] | None = None,
+        timeout: float | None = None,
         **kwargs
     ) -> Mapping[str, SensorReading]:
         """Get temperature and humidity readings from DHT-20 sensor.
@@ -222,7 +221,7 @@ class Dht20(Sensor, EasyResource):
         self,
         command: Mapping[str, ValueTypes],
         *,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
         **kwargs
     ) -> Mapping[str, ValueTypes]:
         """Execute custom commands for DHT-20 sensor.
@@ -258,8 +257,8 @@ class Dht20(Sensor, EasyResource):
             return {"error": f"Unknown command: {cmd_name}"}
 
     async def get_geometries(
-        self, *, extra: Optional[Dict[str, Any]] = None, timeout: Optional[float] = None
-    ) -> List[Geometry]:
+        self, *, extra: dict[str, Any] | None = None, timeout: float | None = None
+    ) -> list[Geometry]:
         """DHT-20 sensor has no physical geometry to report."""
         return []
 
