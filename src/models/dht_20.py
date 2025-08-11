@@ -8,7 +8,7 @@ from viam.proto.common import Geometry, ResourceName
 from viam.resource.base import ResourceBase
 from viam.resource.easy_resource import EasyResource
 from viam.resource.types import Model, ModelFamily
-from viam.utils import SensorReading, ValueTypes
+from viam.utils import SensorReading, ValueTypes, struct_to_dict
 
 try:
     import smbus2
@@ -51,7 +51,7 @@ class Dht20(Sensor, EasyResource):
     @classmethod
     def validate_config(
         cls, config: ComponentConfig
-    ) -> Tuple[Sequence[str], Sequence[str]]:
+    ) -> tuple[Sequence[str], Sequence[str]]:
         """Validate the configuration for DHT-20 sensor.
         
         Expected config attributes:
@@ -61,24 +61,22 @@ class Dht20(Sensor, EasyResource):
             config (ComponentConfig): The configuration for this resource
 
         Returns:
-            Tuple[Sequence[str], Sequence[str]]: A tuple where the
+            tuple[Sequence[str], Sequence[str]]: A tuple where the
                 first element is a list of required dependencies and the
                 second element is a list of optional dependencies
         """
-        # Note: We don't check smbus2 availability here since validation 
-        # may happen before the module dependencies are installed
-        
-        # Validate I2C bus configuration
-        try:
-            if hasattr(config, "attributes") and config.attributes:
-                i2c_bus = config.attributes.get("i2c_bus")
-                if i2c_bus is not None:
-                    if not isinstance(i2c_bus, int) or i2c_bus < 0:
-                        raise ValueError("i2c_bus must be a non-negative integer")
-        except Exception:
-            # If there's any issue accessing attributes, just continue
-            # The validation will happen again during reconfigure
-            pass
+        # Validate I2C bus configuration if provided
+        if "i2c_bus" in config.attributes.fields:
+            i2c_bus_field = config.attributes.fields["i2c_bus"]
+            if not i2c_bus_field.HasField("number_value"):
+                raise Exception("i2c_bus must be a number value.")
+            
+            i2c_bus_value = i2c_bus_field.number_value
+            if not (i2c_bus_value == int(i2c_bus_value)):
+                raise Exception("i2c_bus must be an integer.")
+            
+            if i2c_bus_value < 0:
+                raise Exception("i2c_bus must be a non-negative integer.")
         
         return [], []
 
@@ -101,8 +99,9 @@ class Dht20(Sensor, EasyResource):
                 self.i2c_bus = None
         
         # Get I2C bus number from configuration
-        if hasattr(config, "attributes") and config.attributes:
-            self.i2c_bus_number = config.attributes.get("i2c_bus", 1)
+        attrs = struct_to_dict(config.attributes)
+        self.i2c_bus_number = int(attrs.get("i2c_bus", 1))
+        self.logger.info(f"Using I2C bus {self.i2c_bus_number}")
         
         # Initialize I2C connection
         try:
