@@ -2,7 +2,7 @@ import time
 from typing import (Any, ClassVar, Mapping, Sequence, Tuple)
 
 from typing_extensions import Self
-from viam.components.sensor import *
+from viam.components.sensor import Sensor
 from viam.proto.app.robot import ComponentConfig
 from viam.proto.common import Geometry, ResourceName
 from viam.resource.base import ResourceBase
