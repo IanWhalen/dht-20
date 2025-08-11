@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12.1"
 dependencies = [
+    "pyinstaller>=6.15.0",
     "smbus2>=0.5.0",
     "viam-sdk>=0.51.0",
 ]
