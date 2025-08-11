@@ -8,11 +8,6 @@ This is a Viam module for the DHT-20 temperature and humidity sensor. It impleme
 
 ## Development Commands
 
-### Setup and Installation
-```bash
-./setup.sh          # Creates virtual environment and installs dependencies
-```
-
 ### Running the Module
 ```bash
 ./run.sh            # Runs the module locally with proper signal handling
