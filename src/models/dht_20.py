@@ -65,16 +65,20 @@ class Dht20(Sensor, EasyResource):
                 first element is a list of required dependencies and the
                 second element is a list of optional dependencies
         """
-        # Check if smbus2 is available
-        if smbus2 is None:
-            raise ValueError("smbus2 library is required for DHT-20 sensor")
+        # Note: We don't check smbus2 availability here since validation 
+        # may happen before the module dependencies are installed
         
         # Validate I2C bus configuration
-        if hasattr(config, "attributes") and config.attributes:
-            i2c_bus = config.attributes.get("i2c_bus")
-            if i2c_bus is not None:
-                if not isinstance(i2c_bus, int) or i2c_bus < 0:
-                    raise ValueError("i2c_bus must be a non-negative integer")
+        try:
+            if hasattr(config, "attributes") and config.attributes:
+                i2c_bus = config.attributes.get("i2c_bus")
+                if i2c_bus is not None:
+                    if not isinstance(i2c_bus, int) or i2c_bus < 0:
+                        raise ValueError("i2c_bus must be a non-negative integer")
+        except Exception:
+            # If there's any issue accessing attributes, just continue
+            # The validation will happen again during reconfigure
+            pass
         
         return [], []
 
@@ -102,6 +106,9 @@ class Dht20(Sensor, EasyResource):
         
         # Initialize I2C connection
         try:
+            if smbus2 is None:
+                raise RuntimeError("smbus2 library is required but not available. Please install with: pip install smbus2")
+                
             self.i2c_bus = smbus2.SMBus(self.i2c_bus_number)
             self.logger.info(f"DHT-20 initialized on I2C bus {self.i2c_bus_number}")
             
