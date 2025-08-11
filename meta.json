@@ -2,7 +2,7 @@
   "$schema": "https://dl.viam.dev/module.schema.json",
   "module_id": "ianwhalen:dht-20",
   "visibility": "public",
-  "url": "",
+  "url": "https://github.com/IanWhalen/dht-20",
   "description": "DHT-20 temperature and humidity sensor with I2C communication",
   "models": [
     {
