@@ -139,7 +139,7 @@ class Dht20(Sensor, EasyResource):
                 f"DHT-20 sensor not responding at address 0x{self.DHT20_I2C_ADDRESS:02x}: {e}"
             )
 
-    def close(self):
+    async def close(self):
         """Clean up I2C resources."""
         if self.i2c_bus is not None:
             try:
